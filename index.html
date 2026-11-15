@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>공공도서관 큐레이션</title>
+  <title>공공도서관 큐레이션 - 우면도서관 일반자료</title>
   <style>
     body {
       font-family: 'Noto Sans KR', sans-serif;
@@ -34,7 +34,7 @@
       text-decoration: underline;
     }
     .main-banner {
-      background: url('https://example.com/banner.jpg') center/cover no-repeat;
+      background: url('https://umyeon.seocholib.or.kr/Data/Upload/Board/Contents/20231027151020164_%EB%8C%80%EB%AA%85%EC%A7%80_%EC%8B%A0%EA%B0%84%EB%8F%84%EC%84%9C%EC%B1%85_%ED%8A%B9%EB%B3%84%EC%A0%84.jpg') center/cover no-repeat;
       height: 300px;
       display: flex;
       align-items: center;
@@ -66,6 +66,7 @@
       display: flex;
       gap: 1rem;
       overflow-x: auto;
+      padding-bottom: 0.5rem;
     }
     .book-item {
       min-width: 150px;
@@ -74,25 +75,33 @@
       border-radius: 5px;
       overflow: hidden;
       background: #fafafa;
+      cursor: pointer;
+      transition: box-shadow 0.3s ease;
+    }
+    .book-item:hover {
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
     }
     .book-item img {
       width: 100%;
       display: block;
-      height: 210px;
+      height: 215px;
       object-fit: cover;
       border-bottom: 1px solid #ddd;
+      background-color: #eaeaea;
     }
     .book-info {
-      padding: 0.5rem;
+      padding: 0.5rem 0.7rem;
     }
     .book-info h3 {
       font-size: 1rem;
-      margin: 0.3rem 0;
+      margin: 0.3rem 0 0.2rem 0;
+      color: #004d40;
     }
     .book-info p {
       font-size: 0.85rem;
       color: #555;
-      margin: 0;
+      margin: 0.1rem 0;
+      line-height: 1.2;
     }
     .notice-list {
       list-style: none;
@@ -130,27 +139,32 @@
       <a href="#notices">공지사항</a>
     </nav>
   </header>
+
   <div class="main-banner">
     2026년 가을 신간 도서 특별전
   </div>
+
   <main>
     <section id="recommended">
       <h2>추천도서</h2>
       <div class="book-list">
-        <article class="book-item">
-          <img src="https://example.com/book1.jpg" alt="숲 속의 작은 도서관" />
+        <article class="book-item" onclick="window.open('https://umyeon.seocholib.or.kr/Accession/Detail?no=2248648', '_blank')">
+          <img src="https://umyeon.seocholib.or.kr/Data/Upload/BookCover/20230628170729232_%EB%B0%B1%EC%95%A0%EB%91%90.jpg" alt="백애두" />
           <div class="book-info">
-            <h3>숲 속의 작은 도서관</h3>
-            <p>김진숙</p>
-            <p>따뜻하고 감성적인 이야기로 마음을 채워드립니다.</p>
+            <h3>백애두</h3>
+            <p>이태리</p>
+            <p>창비</p>
+            <p>2023</p>
           </div>
         </article>
-        <article class="book-item">
-          <img src="https://example.com/book2.jpg" alt="시간의 여행자" />
+
+        <article class="book-item" onclick="window.open('https://umyeon.seocholib.or.kr/Accession/Detail?no=2357032', '_blank')">
+          <img src="https://umyeon.seocholib.or.kr/Data/Upload/BookCover/20230914215415065_%EB%AA%85%EC%83%89_%EC%97%AC%EB%8C%80%EC%99%80_%ED%9B%84%EC%9D%B8.jpg" alt="명색 여대와 후인" />
           <div class="book-info">
-            <h3>시간의 여행자</h3>
-            <p>박현우</p>
-            <p>역사와 미래를 넘나드는 흥미진진한 소설.</p>
+            <h3>명색 여대와 후인</h3>
+            <p>손보기</p>
+            <p>흐름출판</p>
+            <p>2023</p>
           </div>
         </article>
       </div>
@@ -159,18 +173,23 @@
     <section id="new-arrivals">
       <h2>신간도서</h2>
       <div class="book-list">
-        <article class="book-item">
-          <img src="https://example.com/new1.jpg" alt="바람의 노래" />
+        <article class="book-item" onclick="window.open('https://umyeon.seocholib.or.kr/Accession/Detail?no=2357853', '_blank')">
+          <img src="https://umyeon.seocholib.or.kr/Data/Upload/BookCover/20230915082926337_%ED%8F%AC%EB%93%9C%EC%99%80_%EC%A0%95%EC%B1%85.jpg" alt="포드와 정착" />
           <div class="book-info">
-            <h3>바람의 노래</h3>
-            <p>윤서진</p>
+            <h3>포드와 정착</h3>
+            <p>허명구</p>
+            <p>회화나무</p>
+            <p>2023</p>
           </div>
         </article>
-        <article class="book-item">
-          <img src="https://example.com/new2.jpg" alt="미래지도" />
+
+        <article class="book-item" onclick="window.open('https://umyeon.seocholib.or.kr/Accession/Detail?no=2116694', '_blank')">
+          <img src="https://umyeon.seocholib.or.kr/Data/Upload/BookCover/20230410112010563_%EC%9D%B4%ED%95%A8%ED%99%94_%EA%B3%B5%EC%9B%90%EA%B8%B0.jpg" alt="이임화 공원기" />
           <div class="book-info">
-            <h3>미래지도</h3>
-            <p>이동현</p>
+            <h3>이임화 공원기</h3>
+            <p>조준우</p>
+            <p>작가정신</p>
+            <p>2023</p>
           </div>
         </article>
       </div>
@@ -200,6 +219,7 @@
       </ul>
     </section>
   </main>
+
   <footer>
     서울특별시 ○○구 ○○동 123-45 | 전화: 02-123-4567 | 운영시간: 평일 09:00 ~ 18:00
   </footer>
