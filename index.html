@@ -1,488 +1,207 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>BOOK MATCHING</title>
-<style>
-  :root{
-    --bg:#fff3ef; --ink:#2b1a1f; --muted:#8a6f76; --pink:#ff4d79; --pink-d:#e0305d;
-    --rose:#ffd9e1; --card:#ffffff; --line:#f1d9de; --shadow:0 12px 30px rgba(120,30,60,.16);
-  }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;background:#f6e7e4}
-  body{font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;color:var(--ink);overflow:hidden}
-  button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
-
-  /* 앱 프레임 */
-  #app{position:relative;max-width:480px;height:100dvh;margin:0 auto;background:var(--bg);overflow:hidden}
-  .screen{position:absolute;inset:0;display:none;flex-direction:column;padding:calc(env(safe-area-inset-top) + 22px) 22px 22px;overflow-y:auto}
-  .screen.active{display:flex;animation:fade .35s ease}
-  .screen.has-nav{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
-  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-
-  .eyebrow{font-size:12px;letter-spacing:.22em;color:var(--pink);font-weight:700}
-  h1,h2{font-family:Georgia,"Times New Roman",serif;letter-spacing:.04em;line-height:1.1}
-  .sub{color:var(--muted);font-size:14px;margin-top:6px;line-height:1.5}
-
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:16px 26px;border-radius:999px;
-       background:var(--pink);color:#fff;font-weight:800;letter-spacing:.12em;font-size:14px;box-shadow:0 10px 24px rgba(255,77,121,.35);transition:transform .15s}
-  .btn:active{transform:scale(.96)}
-  .btn.ghost{background:#fff;color:var(--pink);box-shadow:none;border:1.5px solid var(--pink)}
-
-  /* 인트로 */
-  #intro{align-items:center;text-align:center;justify-content:center;gap:16px}
-  #counter{position:absolute;top:calc(env(safe-area-inset-top) + 18px);right:22px;font-variant-numeric:tabular-nums;
-           font-size:12px;letter-spacing:.2em;color:var(--muted)}
-  #intro h1{font-size:40px;color:var(--pink-d)}
-  #intro .tag{font-size:16px;font-weight:700}
-  #intro .visual{width:min(70%,260px);aspect-ratio:1;object-fit:contain;border-radius:28px}
-  #intro .poem{font-size:14px;line-height:1.8;color:#5c4249}
-
-  /* 질문 */
-  #ask{justify-content:center;gap:26px}
-  #ask h2{font-size:30px;color:var(--pink-d)}
-  .options{display:flex;flex-direction:column;gap:12px}
-  .option{background:#fff;border:1.5px solid var(--line);border-radius:20px;padding:20px;text-align:left;font-size:16px;line-height:1.5;
-          font-weight:600;box-shadow:0 4px 14px rgba(120,30,60,.06);transition:.15s}
-  .option:active,.option:hover{border-color:var(--pink);transform:translateY(-2px)}
-
-  /* 로딩 */
-  #loading{align-items:center;justify-content:center;gap:18px;text-align:center}
-  .hearts{font-size:34px;letter-spacing:.18em;color:var(--pink)}
-  .hearts span{display:inline-block}
-  #loading p{font-size:12px;letter-spacing:.3em;color:var(--muted)}
-
-  /* 덱 */
-  .head{margin-bottom:14px}
-  .head h2{font-size:26px;color:var(--pink-d)}
-  .deck{position:relative;flex:1;min-height:360px;margin:6px 0 16px}
-  .card{position:absolute;inset:0;border-radius:28px;background:var(--card);box-shadow:var(--shadow);overflow:hidden;
-        display:flex;flex-direction:column;touch-action:pan-y;user-select:none;transition:transform .25s ease,opacity .25s ease;will-change:transform}
-  .card .cover{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:28px;text-align:center}
-  .cover .t{font-family:Georgia,serif;font-size:28px;line-height:1.3;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.25);word-break:keep-all}
-  .cover .a{position:absolute;bottom:14px;left:0;right:0;color:rgba(255,255,255,.85);font-size:13px;letter-spacing:.08em}
-  .score{position:absolute;top:16px;left:16px;background:rgba(255,255,255,.92);color:var(--pink-d);font-weight:800;font-size:12px;
-         padding:6px 12px;border-radius:999px;letter-spacing:.08em}
-  .card .info{padding:16px 20px 20px}
-  .card .info .line{font-size:15px;line-height:1.5;font-weight:600}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-  .chip{font-size:12px;background:var(--rose);color:var(--pink-d);padding:4px 10px;border-radius:999px;font-weight:600}
-  .stamp{position:absolute;top:26px;font-size:26px;font-weight:900;letter-spacing:.1em;border:4px solid;border-radius:12px;padding:2px 12px;opacity:0;pointer-events:none}
-  .stamp.like{right:20px;color:#25b36b;transform:rotate(12deg)}
-  .stamp.nope{left:20px;color:#e0305d;transform:rotate(-12deg)}
-  .actions{display:flex;justify-content:center;gap:28px}
-  .round{width:64px;height:64px;border-radius:50%;background:#fff;box-shadow:var(--shadow);font-size:26px;transition:transform .15s}
-  .round:active{transform:scale(.9)}
-  .round.no{color:#7d6a70}.round.yes{color:var(--pink)}
-  .empty-btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:4px}
-  .empty-btns .btn{padding:14px 18px;font-size:13px;letter-spacing:.06em}
-  .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:100%;text-align:center;color:var(--muted);line-height:1.6}
-
-  /* 그리드/리스트 */
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
-  .tile{border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 6px 18px rgba(120,30,60,.1);text-align:left}
-  .tile .cv{height:130px;display:flex;align-items:center;justify-content:center;padding:12px;text-align:center;color:#fff;
-            font-family:Georgia,serif;font-size:16px;line-height:1.3;word-break:keep-all}
-  .tile .tx{padding:10px 12px 14px;font-size:13px}.tile .tx b{display:block;font-size:14px;margin-bottom:2px}.tile .tx span{color:var(--muted)}
-  .list{display:flex;flex-direction:column;gap:12px;margin-top:16px}
-  .row{display:flex;gap:14px;align-items:center;background:#fff;border-radius:20px;padding:12px;box-shadow:0 6px 18px rgba(120,30,60,.08);text-align:left;width:100%}
-  .row .mini{flex:0 0 58px;height:78px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:Georgia,serif;font-size:11px;padding:4px;text-align:center;line-height:1.2}
-  .row b{display:block;font-size:15px}.row span{font-size:13px;color:var(--muted)}
-  .row .pct{margin-left:auto;color:var(--pink-d);font-weight:800;font-size:13px}
-  .note{color:var(--muted);font-size:14px;margin-top:30px;text-align:center;line-height:1.7}
-
-  /* 하단 내비 */
-  nav{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-around;padding:10px 8px calc(10px + env(safe-area-inset-bottom));
-      background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:5}
-  nav.show{display:flex}
-  nav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:700;letter-spacing:.06em;color:#b39aa1;padding:6px 14px}
-  nav button i{font-style:normal;font-size:20px}
-  nav button.on{color:var(--pink-d)}
-
-  /* 프로필 시트 */
-  #sheetWrap{position:absolute;inset:0;background:rgba(40,10,20,.45);display:none;align-items:flex-end;z-index:10}
-  #sheetWrap.open{display:flex}
-  #sheet{width:100%;max-height:88%;overflow-y:auto;background:#fff;border-radius:28px 28px 0 0;padding:20px 22px calc(26px + env(safe-area-inset-bottom));animation:up .3s ease}
-  @keyframes up{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
-  .sheet-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-  .sheet-top .eyebrow{font-size:11px}
-  .x{font-size:26px;line-height:1;color:var(--muted)}
-  #sheet .cv{height:150px;border-radius:20px;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;font-family:Georgia,serif;font-size:24px;padding:20px;margin-bottom:16px;word-break:keep-all}
-  #sheet h3{font-size:22px}
-  #sheet .by{color:var(--muted);font-size:14px;margin:4px 0 12px}
-  #sheet p{font-size:15px;line-height:1.7;margin-top:10px}
-  #sheet .why{background:var(--bg);border-radius:16px;padding:14px 16px;margin-top:14px;font-size:14px;line-height:1.6}
-  #sheet .why b{color:var(--pink-d)}
-  .sheet-actions{display:flex;gap:10px;margin-top:18px}
-  .sheet-actions .btn{flex:1;padding:15px 8px}
-
-  #toast{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 16px);transform:translate(-50%,-30px);background:var(--ink);color:#fff;font-size:13px;
-         padding:10px 18px;border-radius:999px;opacity:0;transition:.3s;z-index:20;pointer-events:none;white-space:nowrap}
-  #toast.show{opacity:1;transform:translate(-50%,0)}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>공공도서관 큐레이션</title>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      color: #333;
+    }
+    header {
+      background-color: #004d40;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 1.5rem;
+      font-weight: 500;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    .main-banner {
+      background: url('https://example.com/banner.jpg') center/cover no-repeat;
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-shadow: 0 0 6px rgba(0,0,0,0.6);
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    main {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    section {
+      background: white;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    }
+    section h2 {
+      margin-top: 0;
+      border-bottom: 2px solid #004d40;
+      padding-bottom: 0.3rem;
+      color: #004d40;
+    }
+    .book-list {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+    }
+    .book-item {
+      min-width: 150px;
+      flex-shrink: 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+      background: #fafafa;
+    }
+    .book-item img {
+      width: 100%;
+      display: block;
+      height: 210px;
+      object-fit: cover;
+      border-bottom: 1px solid #ddd;
+    }
+    .book-info {
+      padding: 0.5rem;
+    }
+    .book-info h3 {
+      font-size: 1rem;
+      margin: 0.3rem 0;
+    }
+    .book-info p {
+      font-size: 0.85rem;
+      color: #555;
+      margin: 0;
+    }
+    .notice-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    .notice-list li {
+      margin-bottom: 0.7rem;
+      padding-left: 1.2rem;
+      position: relative;
+    }
+    .notice-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #004d40;
+      font-weight: bold;
+    }
+    footer {
+      background: #004d40;
+      color: white;
+      text-align: center;
+      font-size: 0.9rem;
+      padding: 1.5rem 1rem;
+    }
+  </style>
 </head>
 <body>
-<div id="app">
-  <div id="toast"></div>
-
-  <!-- 1. 인트로 -->
-  <section class="screen active" id="intro">
-    <div id="counter">0000</div>
-    <h1>BOOK MATCHING</h1>
-    <p class="tag">지금, 누구와 연결되고 싶나요?</p>
-    <!-- 이미지 파일이 없으면 자동으로 숨겨집니다 -->
-    <img class="visual" src="book-matching-visual.png" alt="책과 하트가 연결되는 BOOK MATCHING 일러스트" onerror="this.style.display='none'">
-    <p class="poem">사람은 조금 부담스럽고,<br>혼자는 가끔 심심하고,<br>AI와의 대화는 편하지만 뭔가 아쉽고.<br><br>
-      당신과 잘 맞는 책을 찾아보세요.<br>어쩌면 지금 필요한 연결은<br>한 권의 책에서 시작될지도 모르니까요.</p>
-    <button class="btn" id="startBtn">MATCH START ♥</button>
-  </section>
-
-  <!-- 2. 질문 -->
-  <section class="screen" id="ask">
-    <div>
-      <div class="eyebrow">STEP 01</div>
-      <h2>WHAT ARE YOU<br>LOOKING FOR?</h2>
-      <p class="sub">요즘, 어떤 관계를 찾고 있나요?</p>
-    </div>
-    <div class="options">
-      <button class="option" data-topic="alone">혼자가 편한데, 왜 가끔 외로운 걸까요?</button>
-      <button class="option" data-topic="ai">AI와도 진짜 관계를 맺을 수 있을까요?</button>
-      <button class="option" data-topic="people">다시 사람과 연결되는 방법을 알고 싶어요.</button>
-    </div>
-  </section>
-
-  <!-- 3. 로딩 -->
-  <section class="screen" id="loading">
-    <div class="hearts" id="hearts"><span>♡</span><span>♡</span><span>♡</span><span>♡</span><span>♡</span></div>
-    <p>FINDING YOUR MATCH...</p>
-  </section>
-
-  <!-- 4. For You -->
-  <section class="screen has-nav" id="foryou">
-    <div class="head"><div class="eyebrow">FOR YOU</div><h2>YOUR MATCHES</h2></div>
-    <div class="deck" id="deck"></div>
-    <div class="actions">
-      <button class="round no" id="noBtn" aria-label="넘기기">✕</button>
-      <button class="round yes" id="yesBtn" aria-label="좋아요">♥</button>
-    </div>
-  </section>
-
-  <!-- 5. Discover -->
-  <section class="screen has-nav" id="discover">
-    <div class="head"><div class="eyebrow">DISCOVER</div><h2>ALL BOOKS</h2><p class="sub">표지를 눌러 책 프로필을 확인하세요.</p></div>
-    <div class="grid" id="grid"></div>
-  </section>
-
-  <!-- 6. Liked -->
-  <section class="screen has-nav" id="liked">
-    <div class="head"><div class="eyebrow">LIKED</div><h2>YOUR LIKES ♥</h2><p class="sub">마음에 둔 책들이에요.</p></div>
-    <div class="list" id="likedList"></div>
-  </section>
-
-  <!-- 7. Matched -->
-  <section class="screen has-nav" id="matched">
-    <div class="head"><div class="eyebrow">MATCHED</div><h2>YOUR BOOK MATCHES ♥</h2><p class="sub">당신과 연결된 책들이에요.</p></div>
-    <div class="list" id="matchedList"></div>
-  </section>
-
-  <nav id="nav">
-    <button data-go="foryou" class="on"><i>⌂</i>For You</button>
-    <button data-go="discover"><i>⌕</i>Discover</button>
-    <button data-go="liked"><i>♡</i>Liked</button>
-    <button data-go="matched"><i>✓</i>Matched</button>
-  </nav>
-
-  <!-- 책 프로필 -->
-  <div id="sheetWrap"><div id="sheet"></div></div>
-</div>
-
-<script>
-/* ===== 설정 ===== */
-// 도서관 소장 검색 주소를 넣으면 프로필에 '소장 검색' 버튼이 생깁니다. 예: "https://도서관주소/search?q="
-const LIBRARY_SEARCH_URL = "";
-
-/* ===== 도서 데이터 (예시: 자관 장서에 맞게 교체하세요) ===== */
-const BOOKS = [
-  {id:1,title:"외로워지는 사람들",author:"셰리 터클",topics:["alone","ai"],tags:["기술","관계","외로움"],c:["#ff7a9c","#ff4d79"],
-   line:"연결은 늘었는데, 왜 더 외로울까요?",
-   desc:"스마트폰과 로봇, 소셜 미디어가 우리의 관계 방식을 어떻게 바꾸는지 살펴보는 책입니다.",
-   why:"편리한 연결 속에서 느끼는 공허함의 이유를 차분히 짚어 볼 수 있어요."},
-  {id:2,title:"굿 라이프",author:"로버트 월딩어 · 마크 슐츠",topics:["people","alone"],tags:["행복","인간관계","연구"],c:["#ffa36c","#ff6b6b"],
-   line:"좋은 삶은 결국 좋은 관계에서 시작될까요?",
-   desc:"수십 년에 걸친 성인 발달 연구를 바탕으로, 행복과 건강에 관계가 미치는 영향을 이야기합니다.",
-   why:"다시 사람과 연결되고 싶을 때 현실적인 출발점을 건네줘요."},
-  {id:3,title:"미움받을 용기",author:"기시미 이치로 · 고가 후미타케",topics:["alone","people"],tags:["심리","대화","자기이해"],c:["#8e7bff","#5b4bdb"],
-   line:"타인의 시선에서 한 걸음 물러나 보고 싶다면",
-   desc:"청년과 철학자의 대화를 통해 아들러 심리학의 관점에서 관계와 자유를 이야기합니다.",
-   why:"혼자가 편한 이유와 사람이 부담스러운 이유를 함께 돌아보게 해요."},
-  {id:4,title:"작별인사",author:"김영하",topics:["ai"],tags:["소설","로봇","존재"],c:["#4fb3bf","#2b7a8c"],
-   line:"인간과 기계를 가르는 선은 어디에 있을까요?",
-   desc:"인간과 휴머노이드의 경계를 질문하는 소설입니다.",
-   why:"AI와 맺는 관계를 이야기로 풀어보고 싶은 분께 어울려요."},
-  {id:5,title:"천 개의 파랑",author:"천선란",topics:["ai"],tags:["SF","로봇","연대"],c:["#5aa9ff","#2f6fe0"],
-   line:"사람이 아닌 존재와도 마음을 나눌 수 있을까요?",
-   desc:"로봇과 동물, 사람이 얽히는 이야기를 통해 존재와 연결을 그린 SF 장편소설입니다.",
-   why:"따뜻한 시선으로 AI 시대의 관계를 그려요."},
-  {id:6,title:"우리가 빛의 속도로 갈 수 없다면",author:"김초엽",topics:["ai","alone"],tags:["SF","단편집","이해"],c:["#a47bff","#7b3fe4"],
-   line:"멀리 있는 마음에 닿는 방법은 무엇일까요?",
-   desc:"기술과 사람, 이해와 단절을 다룬 SF 단편집입니다.",
-   why:"짧은 호흡으로 읽으며 다양한 연결의 모양을 만날 수 있어요."},
-  {id:7,title:"여자 둘이 살고 있습니다",author:"김하나 · 황선우",topics:["people"],tags:["에세이","동거","일상"],c:["#ffb347","#ff7a45"],
-   line:"가족이 아니어도 함께 살 수 있다면?",
-   desc:"서로 다른 두 사람이 한집에서 살아가는 일상을 담은 에세이입니다.",
-   why:"새로운 형태의 관계를 가볍고 다정하게 상상해 볼 수 있어요."},
-  {id:8,title:"왜 나는 너를 사랑하는가",author:"알랭 드 보통",topics:["people"],tags:["사랑","소설","철학"],c:["#ff8fb1","#d6336c"],
-   line:"사랑은 어떻게 시작되고 어떻게 변할까요?",
-   desc:"사랑의 시작과 끝을 철학적으로 분석해 가는 소설입니다.",
-   why:"사람과의 연결이 왜 설레고 어려운지 곰곰이 따져 보게 해요."},
-  {id:9,title:"모순",author:"양귀자",topics:["people","alone"],tags:["소설","선택","삶"],c:["#6ccf9b","#2f9e6b"],
-   line:"삶과 사랑 앞에서 우리는 어떤 선택을 할까요?",
-   desc:"한 인물의 삶과 주변 사람들을 통해 선택과 관계의 의미를 묻는 소설입니다.",
-   why:"가까운 사람들을 다시 바라보게 만드는 책이에요."},
-  {id:10,title:"아몬드",author:"손원평",topics:["alone","people"],tags:["소설","감정","성장"],c:["#ffcf5c","#f59f00"],
-   line:"감정을 잘 느끼지 못하는 소년은 관계를 어떻게 배울까요?",
-   desc:"감정을 느끼기 어려운 소년이 사람들과 부딪히며 관계를 배워 가는 성장 소설입니다.",
-   why:"혼자가 편한 사람에게도 누군가와 이어지는 순간이 온다는 걸 보여줘요."},
-  {id:11,title:"불편한 편의점",author:"김호연",topics:["people"],tags:["소설","이웃","따뜻함"],c:["#7dd3a8","#2f9e6b"],
-   line:"작은 동네 가게에서 시작되는 연결",
-   desc:"작은 동네 편의점을 배경으로, 서로 다른 사람들이 가까워지는 과정을 따뜻하게 그린 소설입니다.",
-   why:"가까운 이웃과 다시 연결되는 방법을 부담 없이 떠올리게 해요."},
-  {id:12,title:"어린 왕자",author:"생텍쥐페리",topics:["people","alone"],tags:["고전","우정","관계"],c:["#6ec1ff","#3b82f6"],
-   line:"누군가를 길들인다는 건 어떤 의미일까요?",
-   desc:"어린 왕자와 여우의 만남을 통해 관계와 책임을 이야기하는 고전입니다.",
-   why:"관계의 본질을 짧고 부드럽게 다시 생각하게 해요."},
-  {id:13,title:"사랑의 기술",author:"에리히 프롬",topics:["people"],tags:["사랑","심리","철학"],c:["#ff6b8b","#c2255c"],
-   line:"사랑은 감정일까요, 연습해야 하는 기술일까요?",
-   desc:"사랑을 감정이 아니라 배우고 연습해야 할 기술로 바라보는 책입니다.",
-   why:"사람과의 관계를 대하는 태도를 차분히 점검하게 해요."},
-  {id:14,title:"당신이 옳다",author:"정혜신",topics:["alone","people"],tags:["공감","심리","치유"],c:["#9ad0a0","#4c9f70"],
-   line:"누군가의 마음을 알아주는 일의 힘",
-   desc:"공감이 사람에게 어떤 힘이 되는지 심리 치유의 관점에서 이야기합니다.",
-   why:"외로움과 관계 모두에서 '공감'이라는 출발점을 찾을 수 있어요."},
-  {id:15,title:"언어의 온도",author:"이기주",topics:["people"],tags:["에세이","말","마음"],c:["#ffb08a","#f06543"],
-   line:"말 한마디에도 온도가 있다면",
-   desc:"일상 속 말과 글에 담긴 마음의 온도를 이야기하는 에세이입니다.",
-   why:"가까운 사람에게 건네는 말을 다시 돌아보게 해요."},
-  {id:16,title:"프랑켄슈타인",author:"메리 셸리",topics:["ai","alone"],tags:["고전","창조","외로움"],c:["#5c6b7a","#2b3a47"],
-   line:"스스로 만든 존재에게 우리는 어떤 책임을 질까요?",
-   desc:"스스로 창조한 존재를 외면한 과학자와 그 피조물의 이야기를 그린 고전 소설입니다.",
-   why:"만들어진 존재와의 관계, 책임, 외로움을 함께 생각하게 해요."},
-  {id:17,title:"클라라와 태양",author:"가즈오 이시구로",topics:["ai"],tags:["소설","인공지능","친구"],c:["#ffc857","#e8590c"],
-   line:"사람 곁에서 친구가 되도록 만들어진 AI의 시선",
-   desc:"사람 곁에서 친구 역할을 하도록 만들어진 인공지능 로봇의 시선으로 쓴 소설입니다.",
-   why:"AI와의 관계가 진짜일 수 있는지 감정적으로 따라가 볼 수 있어요."},
-  {id:18,title:"아이, 로봇",author:"아이작 아시모프",topics:["ai"],tags:["SF","로봇","고전"],c:["#74c0fc","#1c7ed6"],
-   line:"로봇과 인간은 어떻게 공존할 수 있을까요?",
-   desc:"로봇과 인간의 공존을 둘러싼 질문을 담은 SF 연작 단편집입니다.",
-   why:"AI 시대의 질문들이 어디서 시작됐는지 짚어볼 수 있어요."},
-  {id:19,title:"지구 끝의 온실",author:"김초엽",topics:["people","alone"],tags:["SF","식물","연대"],c:["#69db7c","#2b8a3e"],
-   line:"황폐한 세상에서 사람들은 어떻게 이어질까요?",
-   desc:"황폐해진 세상에서 식물과 사람들이 이어지는 이야기를 담은 SF 장편소설입니다.",
-   why:"멀어진 사람들 사이의 연결을 따뜻하게 그려요."},
-  {id:20,title:"데미안",author:"헤르만 헤세",topics:["alone"],tags:["고전","성장","자기탐색"],c:["#845ef7","#5f3dc4"],
-   line:"나 자신과 먼저 만나는 시간",
-   desc:"한 소년이 자기 자신을 찾아가는 성장 과정을 그린 소설입니다.",
-   why:"혼자 있는 시간을 자기 이해의 시간으로 바꿔 줘요."},
-  {id:21,title:"나는 나로 살기로 했다",author:"김수현",topics:["alone"],tags:["에세이","자존감","위로"],c:["#f783ac","#d6336c"],
-   line:"남의 기준에서 한 발 벗어나는 연습",
-   desc:"타인의 기준에서 벗어나 자신을 아끼는 삶을 이야기하는 에세이입니다.",
-   why:"혼자인 시간을 편안하게 받아들이고 싶을 때 가볍게 읽기 좋아요."},
-  {id:22,title:"인간관계론",author:"데일 카네기",topics:["people"],tags:["자기계발","소통","고전"],c:["#ffa94d","#e67700"],
-   line:"사람을 대하는 가장 기본적인 방법",
-   desc:"사람을 대하는 태도와 소통의 원칙을 다룬 자기계발 고전입니다.",
-   why:"다시 사람을 만날 때 실천할 수 있는 작은 힌트를 줘요."},
-  {id:23,title:"라이프 3.0",author:"맥스 테그마크",topics:["ai"],tags:["인공지능","미래","교양"],c:["#3bc9db","#1098ad"],
-   line:"AI와 함께하는 미래, 우리는 어떤 선택을 할까요?",
-   desc:"인공지능과 함께하는 인류의 미래를 다각도로 살펴보는 책입니다.",
-   why:"AI와의 관계를 더 넓은 시야에서 생각해 보고 싶을 때 좋아요."}
-];
-
-/* ===== 상태 (저장하지 않음: 사이트를 나가면 초기화) ===== */
-// 이전 버전이 남겨둔 저장값이 있으면 지웁니다.
-try{ ["bm_topic","bm_liked","bm_matched"].forEach(k=>localStorage.removeItem(k)); }catch(e){}
-const BATCH_SIZE = 6;   // '다시 만나기'를 누를 때마다 보여줄 새 책 수
-const state = { topic:null, liked:[], matched:[], passed:[], seen:[], batch:[] };
-const save = () => {};  // 저장 안 함 (기존 호출부 유지용)
-// 뒤로가기 등으로 이전 화면이 복원되어도 처음 상태로 되돌립니다.
-window.addEventListener("pageshow", e => { if(e.persisted) location.reload(); });
-
-const $  = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
-const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const byId = id => BOOKS.find(b=>b.id===id);
-const grad = b => `linear-gradient(145deg,${b.c[0]},${b.c[1]})`;
-const score = b => (b.topics.includes(state.topic)?88:72) + (b.id*7%11);
-
-/* ===== 화면 전환 ===== */
-const MAIN = ["foryou","discover","liked","matched"];
-function show(name){
-  $$(".screen").forEach(s=>s.classList.toggle("active", s.id===name));
-  $("#nav").classList.toggle("show", MAIN.includes(name));
-  $$("#nav button").forEach(b=>b.classList.toggle("on", b.dataset.go===name));
-  if(name==="foryou") renderDeck();
-  if(name==="discover") renderGrid();
-  if(name==="liked") renderList("#likedList", state.liked, "아직 마음에 둔 책이 없어요.<br>For You에서 ♥를 눌러 보세요.");
-  if(name==="matched") renderList("#matchedList", state.matched, "아직 연결된 책이 없어요.<br>책 프로필에서 MATCH를 눌러 보세요.");
-  updateCounter();
-}
-function updateCounter(){ $("#counter").textContent = String(state.matched.length).padStart(4,"0"); }
-
-let toastTimer;
-function toast(msg){
-  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
-  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),1600);
-}
-
-/* ===== 인트로 → 질문 → 로딩 ===== */
-$("#startBtn").onclick = () => show("ask");
-$$(".option").forEach(btn => btn.onclick = () => {
-  state.topic = btn.dataset.topic; state.passed = []; state.seen = []; newBatch();
-  show("loading");
-  const hs = $$("#hearts span"); let i=0;
-  const tick = setInterval(()=>{ hs.forEach((h,k)=>h.textContent = k===i%5 ? "♥" : "♡"); i++; }, 280);
-  setTimeout(()=>{ clearInterval(tick); show("foryou"); }, 2200);
-});
-$$("#nav button").forEach(b => b.onclick = () => show(b.dataset.go));
-
-/* ===== 카드 덱 ===== */
-// 현재 덱에서 아직 고르지 않은 책
-function remaining(){
-  return state.batch.filter(id=>!state.liked.includes(id)&&!state.matched.includes(id)&&!state.passed.includes(id)).map(byId);
-}
-// 한 번도 보여주지 않은 책만 골라 새 덱을 만듭니다.
-function newBatch(){
-  const fresh = BOOKS.filter(b=>!state.seen.includes(b.id))
-    .sort((a,b)=> (b.topics.includes(state.topic)-a.topics.includes(state.topic)) || a.id-b.id)
-    .slice(0,BATCH_SIZE);
-  state.batch = fresh.map(b=>b.id);
-  state.seen.push(...state.batch);
-  return fresh.length;
-}
-function cardHTML(b){
-  return `<div class="cover" style="background:${grad(b)}">
-            <div class="score">${score(b)}% MATCH</div>
-            <div class="t">${esc(b.title)}</div><div class="a">${esc(b.author)}</div>
+  <header>
+    <h1>공공도서관 큐레이션</h1>
+    <nav>
+      <a href="#recommended">추천도서</a>
+      <a href="#new-arrivals">신간도서</a>
+      <a href="#events">행사공지</a>
+      <a href="#notices">공지사항</a>
+    </nav>
+  </header>
+  <div class="main-banner">
+    2026년 가을 신간 도서 특별전
+  </div>
+  <main>
+    <section id="recommended">
+      <h2>추천도서</h2>
+      <div class="book-list">
+        <article class="book-item">
+          <img src="https://example.com/book1.jpg" alt="숲 속의 작은 도서관" />
+          <div class="book-info">
+            <h3>숲 속의 작은 도서관</h3>
+            <p>김진숙</p>
+            <p>따뜻하고 감성적인 이야기로 마음을 채워드립니다.</p>
           </div>
-          <div class="info"><div class="line">${esc(b.line)}</div>
-            <div class="chips">${b.tags.map(t=>`<span class="chip">#${esc(t)}</span>`).join("")}</div></div>
-          <div class="stamp like">LIKE</div><div class="stamp nope">NOPE</div>`;
-}
-function renderDeck(){
-  const deck=$("#deck"), left=remaining();
-  deck.innerHTML="";
-  $(".actions").style.display = left.length ? "flex" : "none";
-  if(!left.length){
-    const hasMore = BOOKS.some(b=>!state.seen.includes(b.id));
-    deck.innerHTML = `<div class="empty"><div style="font-size:40px">♡</div>${
-        hasMore ? "이번 책들을 모두 만났어요.<br>마음에 둔 책은 Liked에서 확인하세요."
-                : "준비한 책을 모두 만났어요.<br>마음에 둔 책은 Liked에서 확인하세요."}
-      <div class="empty-btns">
-        ${hasMore ? '<button class="btn ghost" id="again">다시 만나기</button>' : ''}
-        <button class="btn ghost" id="restart">처음부터 다시 시작</button>
-      </div></div>`;
-    if(hasMore) $("#again").onclick = () => { newBatch(); renderDeck(); };   // 아직 보지 않은 새 책만 등장
-    $("#restart").onclick = () => {
-      // 모든 기록을 지우고 맨 처음(인트로) 화면으로 돌아갑니다.
-      Object.assign(state,{topic:null,liked:[],matched:[],passed:[],seen:[],batch:[]});
-      updateCounter(); show("intro");
-    };
-    return;
-  }
-  left.slice(0,3).reverse().forEach((b,idx,arr)=>{
-    const depth = arr.length-1-idx;           // 0 = 맨 위 카드
-    const el=document.createElement("div");
-    el.className="card"; el.dataset.id=b.id; el.innerHTML=cardHTML(b);
-    el.style.transform = `translateY(${depth*10}px) scale(${1-depth*0.04})`;
-    deck.appendChild(el);
-    if(depth===0) attachDrag(el,b);
-  });
-}
-function attachDrag(el,b){
-  let sx=0,dx=0,drag=false,moved=false;
-  const likeS=el.querySelector(".stamp.like"), nopeS=el.querySelector(".stamp.nope");
-  el.addEventListener("pointerdown",e=>{drag=true;moved=false;sx=e.clientX;dx=0;el.setPointerCapture(e.pointerId);el.style.transition="none";});
-  el.addEventListener("pointermove",e=>{
-    if(!drag) return; dx=e.clientX-sx; if(Math.abs(dx)>6) moved=true;
-    el.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;
-    likeS.style.opacity=Math.max(0,dx/100); nopeS.style.opacity=Math.max(0,-dx/100);
-  });
-  const end=()=>{
-    if(!drag) return; drag=false; el.style.transition="";
-    if(dx>90) fly(el,b,1); else if(dx<-90) fly(el,b,-1);
-    else { el.style.transform=""; likeS.style.opacity=nopeS.style.opacity=0; if(!moved) openProfile(b.id); }
-    dx=0;
-  };
-  el.addEventListener("pointerup",end); el.addEventListener("pointercancel",end);
-}
-function fly(el,b,dir){
-  el.style.transform=`translateX(${dir*520}px) rotate(${dir*25}deg)`; el.style.opacity=0;
-  setTimeout(()=>{
-    if(dir>0){ if(!state.liked.includes(b.id)&&!state.matched.includes(b.id)) state.liked.push(b.id); toast("♥ 마음에 담았어요"); }
-    else state.passed.push(b.id);
-    save(); renderDeck();
-  },220);
-}
-const topCard = () => { const c=$$("#deck .card"); return c[c.length-1]; };
-$("#yesBtn").onclick = () => { const c=topCard(); if(c) fly(c, byId(+c.dataset.id), 1); };
-$("#noBtn").onclick  = () => { const c=topCard(); if(c) fly(c, byId(+c.dataset.id), -1); };
+        </article>
+        <article class="book-item">
+          <img src="https://example.com/book2.jpg" alt="시간의 여행자" />
+          <div class="book-info">
+            <h3>시간의 여행자</h3>
+            <p>박현우</p>
+            <p>역사와 미래를 넘나드는 흥미진진한 소설.</p>
+          </div>
+        </article>
+      </div>
+    </section>
 
-/* ===== Discover / 리스트 ===== */
-function renderGrid(){
-  $("#grid").innerHTML = BOOKS.map(b=>`
-    <button class="tile" data-id="${b.id}">
-      <div class="cv" style="background:${grad(b)}">${esc(b.title)}</div>
-      <div class="tx"><b>${esc(b.title)}</b><span>${esc(b.author)}</span></div>
-    </button>`).join("");
-  $$("#grid .tile").forEach(t=>t.onclick=()=>openProfile(+t.dataset.id));
-}
-function renderList(sel, ids, emptyMsg){
-  const box=$(sel);
-  if(!ids.length){ box.innerHTML=`<p class="note">${emptyMsg}</p>`; return; }
-  box.innerHTML = ids.map(id=>{ const b=byId(id); return `
-    <button class="row" data-id="${b.id}">
-      <div class="mini" style="background:${grad(b)}">${esc(b.title)}</div>
-      <div><b>${esc(b.title)}</b><span>${esc(b.author)}</span></div>
-      <div class="pct">${score(b)}%</div>
-    </button>`; }).join("");
-  $$(sel+" .row").forEach(r=>r.onclick=()=>openProfile(+r.dataset.id));
-}
+    <section id="new-arrivals">
+      <h2>신간도서</h2>
+      <div class="book-list">
+        <article class="book-item">
+          <img src="https://example.com/new1.jpg" alt="바람의 노래" />
+          <div class="book-info">
+            <h3>바람의 노래</h3>
+            <p>윤서진</p>
+          </div>
+        </article>
+        <article class="book-item">
+          <img src="https://example.com/new2.jpg" alt="미래지도" />
+          <div class="book-info">
+            <h3>미래지도</h3>
+            <p>이동현</p>
+          </div>
+        </article>
+      </div>
+    </section>
 
-/* ===== 책 프로필 ===== */
-function openProfile(id){
-  const b=byId(id), isLiked=state.liked.includes(id), isMatched=state.matched.includes(id);
-  const lib = LIBRARY_SEARCH_URL ? `<a class="btn ghost" style="text-decoration:none" target="_blank" rel="noopener"
-      href="${esc(LIBRARY_SEARCH_URL+encodeURIComponent(b.title))}">소장 검색</a>` : "";
-  $("#sheet").innerHTML = `
-    <div class="sheet-top"><span class="eyebrow">BOOK PROFILE</span><button class="x" id="closeSheet" aria-label="닫기">×</button></div>
-    <div class="cv" style="background:${grad(b)}">${esc(b.title)}</div>
-    <h3>${esc(b.title)}</h3><div class="by">${esc(b.author)} · ${score(b)}% MATCH</div>
-    <div class="chips">${b.tags.map(t=>`<span class="chip">#${esc(t)}</span>`).join("")}</div>
-    <p>${esc(b.desc)}</p>
-    <div class="why"><b>이 책과 잘 맞는 이유</b><br>${esc(b.why)}</div>
-    <div class="sheet-actions">
-      <button class="btn ghost" id="likeBtn">${isLiked?"♥ LIKED":"♡ LIKE"}</button>
-      <button class="btn" id="matchBtn">${isMatched?"✓ MATCHED":"MATCH ♥"}</button>
-      ${lib}
-    </div>`;
-  $("#sheetWrap").classList.add("open");
-  $("#closeSheet").onclick = closeSheet;
-  $("#likeBtn").onclick = () => {
-    if(state.matched.includes(id)) return toast("이미 연결된 책이에요");
-    state.liked = state.liked.includes(id) ? state.liked.filter(x=>x!==id) : [...state.liked,id];
-    save(); openProfile(id); refresh();
-  };
-  $("#matchBtn").onclick = () => {
-    if(state.matched.includes(id)){ state.matched = state.matched.filter(x=>x!==id); toast("연결을 해제했어요"); }
-    else { state.matched.push(id); state.liked = state.liked.filter(x=>x!==id); toast("IT'S A MATCH ♥"); }
-    save(); openProfile(id); refresh();
-  };
-}
-function closeSheet(){ $("#sheetWrap").classList.remove("open"); }
-$("#sheetWrap").addEventListener("click",e=>{ if(e.target.id==="sheetWrap") closeSheet(); });
-function refresh(){ const a=$(".screen.active"); if(a && MAIN.includes(a.id)) show(a.id); updateCounter(); }
+    <section id="events">
+      <h2>행사공지</h2>
+      <ul class="notice-list">
+        <li>
+          어린이 북클럽 회원 모집<br />
+          날짜: 2026.11.20 ~ 12.15<br />
+          장소: 2층 문화강좌실
+        </li>
+        <li>
+          독서 마라톤 행사 안내<br />
+          날짜: 2026.12.05<br />
+          장소: 메인홀
+        </li>
+      </ul>
+    </section>
 
-updateCounter();
-</script>
+    <section id="notices">
+      <h2>공지사항</h2>
+      <ul class="notice-list">
+        <li>2026년 11월 30일 도서관 휴관 안내</li>
+        <li>운영시간 변경: 월요일 ~ 금요일 09:00 ~ 18:00</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    서울특별시 ○○구 ○○동 123-45 | 전화: 02-123-4567 | 운영시간: 평일 09:00 ~ 18:00
+  </footer>
 </body>
 </html>
