@@ -3,76 +3,125 @@
 <head>
   <meta charset="UTF-8" />
   <title>이환재 큐레이션(⠕⠚⠧⠒⠨⠗⠀⠰⠍⠰⠾⠊⠥⠠⠎)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
     body {
       font-family: 'Noto Sans KR', sans-serif;
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
       background: #B9A7FC;
       color: #333;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      overflow-x: hidden;
     }
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    /* ===== 헤더 ===== */
     header {
       background-color: #004d40;
       color: white;
-      padding: 1rem 2rem;
+      padding: 1rem clamp(1rem, 4vw, 2rem);
+      padding-left: max(clamp(1rem, 4vw, 2rem), env(safe-area-inset-left));
+      padding-right: max(clamp(1rem, 4vw, 2rem), env(safe-area-inset-right));
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
     }
     header h1 {
       margin: 0;
-      font-size: 2.5rem;
+      font-size: clamp(1.4rem, 5vw, 2.5rem);
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem 1.2rem;
     }
     nav a {
       color: white;
       text-decoration: none;
-      margin-left: 1.5rem;
       font-weight: 500;
+      font-size: clamp(0.9rem, 3.2vw, 1.05rem);
+      padding: 0.35rem 0;           /* 터치 영역 확보 */
     }
     nav a:hover {
       color: #a5d6a7;
     }
+
+    /* ===== 메인 배너 ===== */
     .main-banner {
       background: url('https://image.aladin.co.kr/shop/wbrowse/onlineEmbed/20220401152100.jpg') center/cover no-repeat;
-      height: 300px;
+      height: clamp(160px, 38vw, 300px);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.2rem;
+      font-size: clamp(1.5rem, 6vw, 2.2rem);
       color: white;
       font-weight: 700;
       text-shadow: 0 0 6px rgba(0,0,0,0.7);
-      margin-bottom: 2rem;
+      margin-bottom: clamp(1rem, 4vw, 2rem);
+      padding: 0 1rem;
+      text-align: center;
     }
+
+    /* ===== 본문 ===== */
     main {
       max-width: 1200px;
       margin: 0 auto 3rem auto;
-      padding: 0 1rem;
+      padding: 0 clamp(0.6rem, 3vw, 1rem);
+      padding-left: max(clamp(0.6rem, 3vw, 1rem), env(safe-area-inset-left));
+      padding-right: max(clamp(0.6rem, 3vw, 1rem), env(safe-area-inset-right));
     }
     section {
       background: white;
-      padding: 1.5rem 2rem;
-      margin-bottom: 2rem;
+      padding: clamp(1rem, 4vw, 1.5rem) clamp(1rem, 4.5vw, 2rem);
+      margin-bottom: clamp(1rem, 3vw, 2rem);
       border-radius: 8px;
       box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+      scroll-margin-top: 1rem;
     }
     section h2 {
       margin-top: 0;
       color: #004d40;
-      font-size: 1.5rem;
+      font-size: clamp(1.2rem, 4.5vw, 1.5rem);
       border-bottom: 3px solid #004d40;
       padding-bottom: 8px;
       margin-bottom: 20px;
     }
+    section h3 {
+      font-size: clamp(1rem, 3.8vw, 1.17rem);
+    }
+    section ul {
+      padding-left: 1.2rem;
+      font-size: clamp(0.9rem, 3.5vw, 1rem);
+      line-height: 1.55;
+    }
+
+    /* ===== 추천도서 목록 ===== */
     .book-list {
       display: flex;
-      gap: 1rem;
+      gap: clamp(0.6rem, 2.5vw, 1rem);
       overflow-x: auto;
       padding-bottom: 12px;
       scroll-behavior: smooth;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
     }
     .book-card {
-      flex: 0 0 150px;
+      flex: 0 0 clamp(120px, 34vw, 160px);
+      scroll-snap-align: start;
       border-radius: 8px;
       box-shadow: 0 1px 6px rgba(0,0,0,0.1);
       background-color: #fafafa;
@@ -83,13 +132,15 @@
       overflow: hidden;
       text-align: center;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
     .book-card:hover {
       box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     }
     .book-card img {
       width: 100%;
-      height: 210px;
+      aspect-ratio: 5 / 7;          /* 화면 크기와 상관없이 같은 비율 유지 */
+      height: auto;
       object-fit: cover;
       border-bottom: 1px solid #ddd;
       background-color: #ddd;
@@ -102,29 +153,31 @@
       justify-content: center;
     }
     .book-info h3 {
-      font-size: 1rem;
+      font-size: clamp(0.9rem, 3.4vw, 1rem);
       margin: 8px 0 6px;
       color: #004d40;
       font-weight: 700;
-      line-height: 1.2;
+      line-height: 1.25;
     }
     .book-info p {
       margin: 0;
-      font-size: 0.85rem;
+      font-size: clamp(0.75rem, 2.9vw, 0.85rem);
       color: #555;
-      line-height: 1.3;
+      line-height: 1.35;
     }
+
+    /* ===== 공지 목록 ===== */
     .notice-list {
       list-style: none;
       padding-left: 0;
-      font-size: 1rem;
+      font-size: clamp(0.9rem, 3.5vw, 1rem);
       color: #333;
     }
     .notice-list li {
       position: relative;
       padding-left: 18px;
       margin-bottom: 10px;
-      line-height: 1.4;
+      line-height: 1.5;
     }
     .notice-list li::before {
       content: "•";
@@ -136,26 +189,34 @@
       font-size: 1.3rem;
       line-height: 1;
     }
+
+    /* ===== 푸터 ===== */
     footer {
       background-color: #004d40;
       color: white;
       text-align: center;
-      font-size: 0.9rem;
+      font-size: clamp(0.78rem, 3vw, 0.9rem);
+      line-height: 1.6;
       padding: 1.5rem 1rem;
+      padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
     }
-    @media (max-width: 650px) {
-      header h1 {
-        font-size: 1.3rem;
+
+    /* ===== 작은 화면 보정 ===== */
+    @media (max-width: 480px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
       }
-      nav a {
-        margin-left: 1rem;
-        font-size: 0.9rem;
+    }
+    @media (max-width: 360px) {
+      section {
+        border-radius: 6px;
       }
+    }
+    /* 태블릿 이상: 카드 약간 크게 */
+    @media (min-width: 900px) {
       .book-card {
-        flex: 0 0 120px;
-      }
-      .book-card img {
-        height: 170px;
+        flex-basis: 170px;
       }
     }
   </style>
@@ -178,15 +239,15 @@
   <main>
     <section id="ability">
       <h2>경력 및 자격</h2>
-    <h3>1.분관 규모 도서관 개관 업무</h3>
-    <ul>
+      <h3>1. 분관 규모 도서관 개관 업무</h3>
+      <ul>
         <li>자료실 서비스 구축: 책이음, 책바다 등 시스템 연동</li>
         <li>전산 및 시설 관리: 홈페이지, 모바일앱, CCTV, 개인정보 보호 등</li>
         <li>자산 및 행정 관리: 물품 구입, 경상경비 관리</li>
-    </ul>
+      </ul>
 
-    <h3>2. 도서관 운영</h3>
-    <ul>
+      <h3>2. 도서관 운영</h3>
+      <ul>
         <li>이용자 응대 및 자료실 관리: 서가배치, 연체 도서 회수, 자원봉사자 관리 등</li>
         <li>행정 효율화: 함수 및 VBA 활용 행정업무 시간 평균 73% 단축</li>
         <li>수서업무: 아동도서 MARC 직접입력 및 희망도서 추가 구입</li>
@@ -194,21 +255,21 @@
         <li>다양한 프로그램 운영: 북큐레이션, 보드게임 탐험대, 독서교실 등</li>
         <li>전산 및 시설 보안: 중대산업재해 및 개인정보 보호 담당</li>
         <li>홍보 및 행정 관리: 업무매뉴얼 제작, 이용자 만족도 조사, 홍보물 제작 등</li>
-    </ul>
-    <h3>3. 포용복지 실현</h3>
-    <ul>
-        <li>정보취약계층 배려: 시각 및 중복장애인 전자책 제작 참여, 점역교정사 자격 준비</li>
-    </ul>
+      </ul>
 
-      
+      <h3>3. 포용복지 실현</h3>
+      <ul>
+        <li>정보취약계층 배려: 시각 및 중복장애인 전자책 제작 참여, 점역교정사 자격 준비</li>
+      </ul>
     </section>
+
     <section id="books">
       <h2>추천목록</h2>
       <div class="book-list" role="list">
         <article class="book-card" role="listitem" tabindex="0"
           onclick="window.open('https://umyeon.seocholib.or.kr/bookDetail/MO/441612172/441612170/9791130684116', '_blank')"
           onkeypress="if(event.key==='Enter') window.open('https://www.sblib.seoul.kr/library/menu/10012/program/30003/searchResultDetail.do?recKey=415160979&bookKey=415160980&publishFormCode=BO', '_blank')">
-          <img src="1.jpg" alt="데미안 표지" />
+          <img src="1.jpg" alt="데미안 표지" loading="lazy" />
           <div class="book-info">
             <h3>데미안</h3>
             <p>저자: 헤르만 헤세</p>
@@ -216,10 +277,11 @@
             <p>출간년도: 2000</p>
           </div>
         </article>
+
         <article class="book-card" role="listitem" tabindex="0"
           onclick="window.open('https://umyeon.seocholib.or.kr/bookDetail/MO/441612172/441612170/9791130684116', '_blank')"
           onkeypress="if(event.key==='Enter') window.open('https://www.sblib.seoul.kr/library/menu/10012/program/30003/searchResultDetail.do?recKey=415160979&bookKey=415160980&publishFormCode=BO', '_blank')">
-          <img src="10.jpg" alt="데미안 표지" />
+          <img src="10.jpg" alt="어린이라는 세계 표지" loading="lazy" />
           <div class="book-info">
             <h3>어린이라는 세계</h3>
             <p>저자: 김소영</p>
@@ -231,7 +293,7 @@
         <article class="book-card" role="listitem" tabindex="0"
           onclick="window.open('https://umyeon.seocholib.or.kr/bookDetail/MO/441612169/441612167/9791199528239', '_blank')"
           onkeypress="if(event.key==='Enter') window.open('https://www.sblib.seoul.kr/library/menu/10012/program/30003/searchResultDetail.do?recKey=112713717&bookKey=112713719&publishFormCode=BO', '_blank')">
-          <img src="2.jpg" alt="모든 관계는 말투에서 시작된다 표지" />
+          <img src="2.jpg" alt="모든 관계는 말투에서 시작된다 표지" loading="lazy" />
           <div class="book-info">
             <h3>모든 관계는 말투에서 시작된다</h3>
             <p>저자: 김범준</p>
@@ -243,7 +305,7 @@
         <article class="book-card" role="listitem" tabindex="0"
           onclick="window.open('https://umyeon.seocholib.or.kr/bookDetail/MO/441612169/441612167/9791199528239', '_blank')"
           onkeypress="if(event.key==='Enter') window.open('https://www.sblib.seoul.kr/library/menu/10012/program/30003/searchResultDetail.do?recKey=71363052&bookKey=90810185&publishFormCode=BO', '_blank')">
-          <img src="3.jpg" alt="AI 프롬프트 어휘 사전 표지" />
+          <img src="3.jpg" alt="살아 있는 동안 꼭 해야 할 49가지 표지" loading="lazy" />
           <div class="book-info">
             <h3>살아 있는 동안 꼭 해야 할 49가지</h3>
             <p>저자: 탄줘잉</p>
@@ -255,11 +317,11 @@
         <article class="book-card" role="listitem" tabindex="0"
           onclick="window.open('https://umyeon.seocholib.or.kr/bookDetail/MO/441612169/441612167/9791199528239', '_blank')"
           onkeypress="if(event.key==='Enter') window.open('https://www.gentosha.co.jp/book/detail/9784344414662/', '_blank')">
-          <img src="4.jpg" alt="AI 프롬프트 어휘 사전 표지" />
+          <img src="4.jpg" alt="鹿男あをによし 표지" loading="lazy" />
           <div class="book-info">
             <h3>鹿男あをによし</h3>
             <p>저자: 万城目学(마키베마나부)</p>
-            <p>출판사:  幻冬舎(겐토샤) </p>
+            <p>출판사: 幻冬舎(겐토샤)</p>
             <p>출간년도: 2010</p>
           </div>
         </article>
@@ -267,7 +329,7 @@
         <article class="book-card" role="listitem" tabindex="0"
           onclick="window.open('https://umyeon.seocholib.or.kr/bookDetail/MO/441612169/441612167/9791199528239', '_blank')"
           onkeypress="if(event.key==='Enter') window.open('https://www.sblib.seoul.kr/library/menu/10012/program/30003/searchResultDetail.do?recKey=404835778&bookKey=404835780&publishFormCode=BO', '_blank')">
-          <img src="5.jpg" alt="AI 프롬프트 어휘 사전 표지" />
+          <img src="5.jpg" alt="책을 읽는 사람만이 손에 넣는 것 표지" loading="lazy" />
           <div class="book-info">
             <h3>책을 읽는 사람만이 손에 넣는 것</h3>
             <p>저자: 후지하라 가즈히로</p>
@@ -279,53 +341,50 @@
         <article class="book-card" role="listitem" tabindex="0"
           onclick="window.open('https://umyeon.seocholib.or.kr/bookDetail/MO/441612169/441612167/9791199528239', '_blank')"
           onkeypress="if(event.key==='Enter') window.open('https://www.sblib.seoul.kr/library/menu/10012/program/30003/searchResultDetail.do?recKey=113372316&bookKey=113372318&publishFormCode=BO', '_blank')">
-          <img src="6.jpg" alt="AI 프롬프트 어휘 사전 표지" />
+          <img src="6.jpg" alt="문제는 무기력이다 표지" loading="lazy" />
           <div class="book-info">
             <h3>문제는 무기력이다</h3>
             <p>저자: 박경숙</p>
             <p>출판사: 와이즈베리</p>
             <p>출간년도: 2013</p>
           </div>
-        </article>        
+        </article>
 
         <article class="book-card" role="listitem" tabindex="0"
           onclick="window.open('https://umyeon.seocholib.or.kr/bookDetail/MO/441612169/441612167/9791199528239', '_blank')"
           onkeypress="if(event.key==='Enter') window.open('https://www.sblib.seoul.kr/library/menu/10012/program/30003/searchResultDetail.do?recKey=112992714&bookKey=112992716&publishFormCode=BO', '_blank')">
-          <img src="7.jpg" alt="AI 프롬프트 어휘 사전 표지" />
+          <img src="7.jpg" alt="뭘 해도 되는 사람 표지" loading="lazy" />
           <div class="book-info">
             <h3>뭘 해도 되는 사람</h3>
             <p>저자: 질 해슨</p>
             <p>출판사: 유노북스</p>
             <p>출간년도: 2017</p>
           </div>
-        </article>        
-        </article>        
+        </article>
 
         <article class="book-card" role="listitem" tabindex="0"
           onclick="window.open('https://umyeon.seocholib.or.kr/bookDetail/MO/441612169/441612167/9791199528239', '_blank')"
           onkeypress="if(event.key==='Enter') window.open('https://www.sblib.seoul.kr/library/menu/10012/program/30003/searchResultDetail.do?recKey=415686128&bookKey=415686130&publishFormCode=BO', '_blank')">
-          <img src="8.jpg" alt="AI 프롬프트 어휘 사전 표지" />
+          <img src="8.jpg" alt="인생은 실전이다 표지" loading="lazy" />
           <div class="book-info">
             <h3>인생은 실전이다</h3>
             <p>저자: 신영준, 주언규</p>
             <p>출판사: 상상스퀘어</p>
             <p>출간년도: 2021</p>
           </div>
-        </article> 
-        </article>        
+        </article>
 
         <article class="book-card" role="listitem" tabindex="0"
           onclick="window.open('https://umyeon.seocholib.or.kr/bookDetail/MO/441612169/441612167/9791199528239', '_blank')"
           onkeypress="if(event.key==='Enter') window.open('https://www.sblib.seoul.kr/library/menu/10012/program/30003/searchResultDetail.do?recKey=429990843&bookKey=429990845&publishFormCode=BO', '_blank')">
-          <img src="9.jpg" alt="AI 프롬프트 어휘 사전 표지" />
+          <img src="9.jpg" alt="낭독을 시작합니다 표지" loading="lazy" />
           <div class="book-info">
             <h3>낭독을 시작합니다</h3>
             <p>저자: 문선희 [외]</p>
             <p>출판사: 페이퍼타이거</p>
             <p>출간년도: 2023</p>
           </div>
-        </article> 
-        
+        </article>
       </div>
     </section>
 
