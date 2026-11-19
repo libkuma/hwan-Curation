@@ -116,11 +116,11 @@
       gap: clamp(1rem, 3vw, 2rem);
       align-items: center;
     }
-    /* 프로필 사진 틀: 이 비율(6 / 4)이 곧 변환 규격입니다. 바꾸면 업로드 변환도 자동으로 따라갑니다. */
+    /* 프로필 사진 틀: 이 비율(6 / 7)이 곧 변환 규격입니다. 바꾸면 업로드 변환도 자동으로 따라갑니다. */
     .photo-frame {
       display: block;
       width: 100%;
-      aspect-ratio: 6 / 4;
+      aspect-ratio: 6 / 7;
       overflow: hidden;
       border-radius: 8px;
       background-color: #ddd;
@@ -378,14 +378,6 @@
           <!-- 사진을 올리면 틀(.photo-frame)의 비율로 자동 크롭·리사이즈됩니다 -->
           <div class="photo-frame" id="photoFrame" title="클릭하여 사진 변경">
             <img id="profileImg" src="0.png" alt="이환재 프로필 사진" />
-          </div>
-          <input type="file" id="photoInput" accept="image/*" hidden />
-          <div class="photo-actions">
-            <button type="button" class="photo-btn" id="photoUpload">사진 업로드</button>
-            <button type="button" class="photo-btn" id="photoDownload" hidden>변환된 사진 저장</button>
-            <button type="button" class="photo-btn" id="photoReset" hidden>원래대로</button>
-            <p class="photo-msg" id="photoMsg" role="alert" hidden></p>
-          </div>
         </div>
         <div class="profile-text">
           <h3>안녕하세요, 사서 이환재입니다.</h3>
