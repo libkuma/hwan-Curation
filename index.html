@@ -125,6 +125,10 @@
       background-color: #ddd;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
+    .profile-photo a {
+      display: block;
+      cursor: zoom-in;
+    }
     .profile-text h3 {
       margin: 0 0 0.6rem;
       color: #004d40;
@@ -340,7 +344,9 @@
       <div class="profile">
         <div class="profile-photo">
           <!-- 112 x 97px 사진을 넣으세요 -->
-          <img src="0.png" width="446" height="386" alt="이환재 프로필 사진" />
+          <a href="0.png" id="profile-photo-link" target="_blank" rel="noopener" title="클릭하면 원본 크기로 새 창에서 보기">
+            <img src="0.png" width="446" height="386" alt="이환재 프로필 사진" />
+          </a>
         </div>
         <div class="profile-text">
           <h3>안녕하세요, 사서 이환재입니다.</h3>
@@ -572,5 +578,26 @@
     서울 거주 | 전화: 010-0000-0000 | 활동시간: 평일 06:30 ~ 23:00, 주말 08:30~22:00
   </footer>
 
+  <script>
+    /* 프로필 사진 클릭 → 새 창에 원본 크기로 표시 */
+    (function () {
+      var link = document.getElementById('profile-photo-link');
+      if (!link) return;
+      link.addEventListener('click', function (e) {
+        var src = link.href;
+        var probe = new Image();
+        probe.onload = function () {
+          var w = Math.min(probe.naturalWidth, screen.availWidth - 40);
+          var h = Math.min(probe.naturalHeight, screen.availHeight - 80);
+          var win = window.open(src, 'profilePhoto',
+            'width=' + w + ',height=' + h + ',resizable=yes,scrollbars=yes');
+          if (!win) window.open(src, '_blank');   // 팝업 차단 시 새 탭
+        };
+        probe.onerror = function () { window.open(src, '_blank'); };
+        probe.src = src;
+        e.preventDefault();
+      });
+    })();
+  </script>
 </body>
 </html>
