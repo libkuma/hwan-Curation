@@ -109,6 +109,103 @@
       line-height: 1.55;
     }
 
+    /* ===== 자기소개 (사진 3 : 소개글 7) ===== */
+    .profile {
+      display: grid;
+      grid-template-columns: 3fr 7fr;
+      gap: clamp(1rem, 3vw, 2rem);
+      align-items: center;
+    }
+    .profile-photo img {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      border-radius: 8px;
+      background-color: #ddd;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .profile-text h3 {
+      margin: 0 0 0.6rem;
+      color: #004d40;
+      font-size: clamp(1.1rem, 4vw, 1.4rem);
+    }
+    .profile-text p {
+      margin: 0 0 0.7rem;
+      font-size: clamp(0.9rem, 3.4vw, 1rem);
+      line-height: 1.7;
+    }
+
+    /* ===== 사진 갤러리 ===== */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(clamp(130px, 28vw, 220px), 1fr));
+      gap: clamp(0.5rem, 2vw, 1rem);
+    }
+    .gallery figure {
+      margin: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fafafa;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+    }
+    .gallery img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background-color: #ddd;
+      transition: transform 0.3s ease;
+    }
+    .gallery figure:hover img {
+      transform: scale(1.04);
+    }
+    .gallery figcaption {
+      padding: 6px 8px;
+      font-size: clamp(0.75rem, 2.9vw, 0.85rem);
+      color: #555;
+      text-align: center;
+    }
+
+    /* ===== 영상 갤러리 (여러 개) ===== */
+    .video-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+      gap: clamp(0.6rem, 2vw, 1rem);
+    }
+    .video-gallery figure {
+      margin: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fafafa;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+    }
+    .video-gallery .video-wrap {
+      border-radius: 0;
+    }
+    .video-gallery figcaption {
+      padding: 6px 8px;
+      font-size: clamp(0.75rem, 2.9vw, 0.85rem);
+      color: #555;
+      text-align: center;
+    }
+
+    /* ===== 영상 (16:9 반응형) ===== */
+    .video-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #000;
+    }
+    .video-wrap iframe,
+    .video-wrap video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
     /* ===== 추천도서 목록 ===== */
     .book-list {
       display: flex;
@@ -237,6 +334,20 @@
   </div>
 
   <main>
+    <section id="profile">
+      <div class="profile">
+        <div class="profile-photo">
+          <!-- 본인 사진 파일명으로 교체하세요 -->
+          <img src="profile.jpg" alt="이환재 프로필 사진" />
+        </div>
+        <div class="profile-text">
+          <h3>안녕하세요, 사서 이환재입니다.</h3>
+          <p>개관부터 운영까지 도서관 현장에서 일해 온 사서입니다. 이용자 한 분 한 분이 편하게 책을 만나고 머물 수 있는 공간을 만들기 위해 고민하고 있습니다.</p>
+          <p>정보취약계층까지 배려하는 포용적인 도서관 서비스, 지역주민과 함께 성장하는 도서관을 목표로 합니다.</p>
+        </div>
+      </div>
+    </section>
+
     <section id="ability">
       <h2>경력 및 자격(⠈⠻⠐⠱⠁⠀⠑⠕⠆⠀⠨⠈⠱⠁)</h2>
       <h3>1. 분관 규모 도서관 개관 업무</h3>
@@ -402,6 +513,71 @@
         <li>2026년 11월 30일 도서관 휴관 안내</li>
         <li>운영시간 변경: 월요일 ~ 금요일 09:00 ~ 18:00</li>
       </ul>
+    </section>
+
+    <section id="photos">
+      <h2>사진</h2>
+      <div class="gallery">
+        <!-- 사진을 추가하려면 figure 블록을 복사해서 붙여넣으세요 -->
+        <figure>
+          <img src="photo1.jpg" alt="활동 사진 1" loading="lazy" />
+          <figcaption>사진 설명 1</figcaption>
+        </figure>
+        <figure>
+          <img src="photo2.jpg" alt="활동 사진 2" loading="lazy" />
+          <figcaption>사진 설명 2</figcaption>
+        </figure>
+        <figure>
+          <img src="photo3.jpg" alt="활동 사진 3" loading="lazy" />
+          <figcaption>사진 설명 3</figcaption>
+        </figure>
+        <figure>
+          <img src="photo4.jpg" alt="활동 사진 4" loading="lazy" />
+          <figcaption>사진 설명 4</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="video">
+      <h2>영상</h2>
+      <div class="video-gallery">
+        <!-- 영상을 추가하려면 figure 블록을 복사해서 붙여넣으세요 -->
+
+        <!-- 방법 1) 유튜브: VIDEO_ID를 영상 주소의 v= 뒤 값으로 교체 -->
+        <figure>
+          <div class="video-wrap">
+            <iframe
+              src="https://www.youtube.com/embed/VIDEO_ID_1"
+              title="영상 1"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              loading="lazy"></iframe>
+          </div>
+          <figcaption>영상 설명 1</figcaption>
+        </figure>
+
+        <figure>
+          <div class="video-wrap">
+            <iframe
+              src="https://www.youtube.com/embed/VIDEO_ID_2"
+              title="영상 2"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              loading="lazy"></iframe>
+          </div>
+          <figcaption>영상 설명 2</figcaption>
+        </figure>
+
+        <!-- 방법 2) 직접 올린 파일: 아래 블록을 사용하세요 -->
+        <figure>
+          <div class="video-wrap">
+            <video controls preload="metadata" poster="poster3.jpg">
+              <source src="video3.mp4" type="video/mp4" />
+            </video>
+          </div>
+          <figcaption>영상 설명 3</figcaption>
+        </figure>
+      </div>
     </section>
   </main>
 
