@@ -303,6 +303,77 @@
       padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
     }
 
+    /* ===== 우측 플로팅 네비게이션 (스크롤 따라 이동 + 현재 위치 표시) ===== */
+    html {
+      scroll-behavior: smooth;
+    }
+    .side-nav {
+      position: fixed;
+      right: max(12px, env(safe-area-inset-right));
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.7rem 0.5rem;
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 999px;
+      box-shadow: 0 3px 14px rgba(0,0,0,0.25);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    .side-nav a {
+      position: relative;
+      display: block;
+      width: 14px;
+      height: 14px;
+      margin: 0 auto;
+      border-radius: 50%;
+      background: #b0bec5;
+      transition: background 0.25s ease, transform 0.25s ease;
+      /* 터치 영역 확대 */
+    }
+    .side-nav a::before {
+      content: "";
+      position: absolute;
+      inset: -8px;
+    }
+    .side-nav a:hover {
+      background: #00796b;
+      transform: scale(1.25);
+    }
+    .side-nav a.active {
+      background: #004d40;
+      transform: scale(1.4);
+    }
+    /* 마우스를 올리면 왼쪽으로 메뉴 이름 표시 */
+    .side-nav a span {
+      position: absolute;
+      right: 26px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #004d40;
+      color: #fff;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      padding: 4px 10px;
+      border-radius: 6px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .side-nav a:hover span,
+    .side-nav a:focus-visible span,
+    .side-nav a.active span {
+      opacity: 1;
+    }
+    @media (max-width: 600px) {
+      /* 모바일: 라벨은 숨기고 점만 표시 */
+      .side-nav a.active span { opacity: 0; }
+      .side-nav { padding: 0.55rem 0.4rem; gap: 0.4rem; }
+    }
+
     /* ===== 작은 화면 보정 ===== */
     @media (max-width: 480px) {
       header {
@@ -334,6 +405,15 @@
       <a href="#video">영상</a>
     </nav>
   </header>
+
+  <!-- 우측 플로팅 네비게이션 -->
+  <nav class="side-nav" aria-label="페이지 구간 이동">
+    <a href="#profile" aria-label="소개"><span>소개</span></a>
+    <a href="#ability" aria-label="경력"><span>경력</span></a>
+    <a href="#books" aria-label="추천목록"><span>추천목록</span></a>
+    <a href="#photos" aria-label="행사사진"><span>행사사진</span></a>
+    <a href="#video" aria-label="영상"><span>영상</span></a>
+  </nav>
 
   <div class="main-banner">
   <p>개관부터 운영까지 다양한 현장을 경험한 사서, 지역주민과 함께하는 도서관을 만들겠습니다.</p>
@@ -620,6 +700,41 @@
   </footer>
 
   <script>
+    /* 스크롤 위치에 따라 우측 네비게이션 현재 구간 표시 */
+    (function () {
+      var links = document.querySelectorAll('.side-nav a');
+      var sections = Array.prototype.map.call(links, function (a) {
+        return document.querySelector(a.getAttribute('href'));
+      });
+      function update() {
+        var pos = window.scrollY + window.innerHeight * 0.35;
+        var current = 0;
+        for (var i = 0; i < sections.length; i++) {
+          if (sections[i] && sections[i].offsetTop <= pos) current = i;
+        }
+        // 페이지 맨 아래면 마지막 항목 활성화
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+          current = sections.length - 1;
+        }
+        // 첫 섹션 위(배너 영역)에서는 활성 해제
+        var first = sections[0];
+        var none = first && window.scrollY + window.innerHeight * 0.35 < first.offsetTop;
+        links.forEach(function (a, idx) {
+          a.classList.toggle('active', !none && idx === current);
+        });
+      }
+      var ticking = false;
+      window.addEventListener('scroll', function () {
+        if (!ticking) {
+          requestAnimationFrame(function () { update(); ticking = false; });
+          ticking = true;
+        }
+      }, { passive: true });
+      window.addEventListener('resize', update);
+      window.addEventListener('load', update);
+      update();
+    })();
+
     /* 프로필 사진 클릭 → 새 창에 원본 크기로 표시 */
     (function () {
       var link = document.getElementById('profile-photo-link');
