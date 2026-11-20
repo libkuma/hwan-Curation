@@ -419,6 +419,8 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;   /* 모바일 탭 지연 제거 */
+      min-height: 40px;             /* 손가락으로 누르기 편한 크기 */
     }
     .tts-btn:hover {
       background: #e0f2f1;
@@ -436,6 +438,11 @@
     }
     .tts-btn .tts-icon {
       font-size: 1.1em;
+    }
+
+    /* 모바일: 배너 문구가 버튼과 겹치지 않도록 아래로 내림 */
+    @media (max-width: 600px) {
+      .main-banner { padding-top: 52px; }
     }
 
     /* 태블릿 이상: 카드 약간 크게 */
@@ -813,7 +820,7 @@
       });
     })();
 
-    /* 음성 읽기 (Web Speech API) */
+    /* 음성 읽기 (Web Speech API) - PC / 안드로이드 / 아이폰 호환 */
     (function () {
       var btn = document.getElementById('tts-btn');
       if (!btn) return;
@@ -829,39 +836,56 @@
 
       var synth = window.speechSynthesis;
       var speaking = false;
+      var token = 0;        // 중지/재시작 때 이전 콜백을 무시하기 위한 번호
+      var current = null;   // 읽는 중인 발화를 붙잡아 둠 (모바일 Chrome의 가비지 수집 버그 방지)
       var koVoice = null;
       var isMale = false;
+      var MALE_RE = /injoon|인준|hyunsu|현수|minsu|민수|male|남성|man\b/i;
+      var IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+                      (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
 
       /* 한국어 음성 중 가장 자연스러운(부드러운) 음성을 점수로 선택 */
       function scoreVoice(v) {
         var s = 0;
         var n = (v.name || '').toLowerCase();
-        if (/natural|neural|online/.test(n)) s += 100;          // Edge 신경망 음성 (SunHi, InJoon 등)
-        // 서버 기반(구글 등) 음성은 톤 조절이 무시되므로, 남성 음성이 없으면 기기 내장 음성을 선호
+        if (/natural|neural|online/.test(n)) s += 100;
         if (v.localService) s += 60;
         if (/google/.test(n)) s -= 40;
-        if (/injoon|인준|hyunsu|현수|minsu|민수|male|남성|man\b/.test(n)) s += 200; // 남성 음성 우선
-        if (/sunhi|선희|yuna|유나|sora|소라|heami|혜미|female|여성/.test(n)) s -= 150; // 여성 음성 제외
-        if (/premium|enhanced|향상/.test(n)) s += 40;           // iOS/macOS 고품질
+        if (MALE_RE.test(n)) s += 200;                                                 // 남성 음성 우선
+        if (/sunhi|선희|yuna|유나|sora|소라|heami|혜미|female|여성/.test(n)) s -= 150;   // 여성 음성 후순위
+        if (/premium|enhanced|향상/.test(n)) s += 40;
         if (/^ko[-_]kr$/i.test(v.lang)) s += 5;
         return s;
       }
-      var koList = [];
-      var MALE_RE = /injoon|인준|hyunsu|현수|minsu|민수|male|남성|man\b/i;
-
-      function applyVoice(v) {
-        koVoice = v || null;
-        isMale = !!v && MALE_RE.test(v.name || '');
-      }
       function pickVoice() {
-        koList = synth.getVoices().filter(function (v) {
-          return /^ko([-_]|$)/i.test(v.lang);
+        var list = synth.getVoices().filter(function (v) {
+          return /^ko([-_]|$)/i.test(v.lang);      // 안드로이드의 ko_KR 형식도 허용
         });
-        koList.sort(function (a, b) { return scoreVoice(b) - scoreVoice(a); });
-        applyVoice(koList[0]);
+        list.sort(function (a, b) { return scoreVoice(b) - scoreVoice(a); });
+        koVoice = list[0] || null;
+        isMale = !!koVoice && MALE_RE.test(koVoice.name || '');
       }
       pickVoice();
-      if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = pickVoice;
+      if (synth.addEventListener) synth.addEventListener('voiceschanged', pickVoice);
+      else synth.onvoiceschanged = pickVoice;
+      /* 일부 모바일 브라우저는 음성 목록이 늦게 로드되므로 잠시 재시도 */
+      var tries = 0;
+      var poll = setInterval(function () {
+        pickVoice();
+        if (koVoice || ++tries > 20) clearInterval(poll);
+      }, 250);
+
+      /* 긴 문장은 모바일에서 끊기므로 100자 안팎으로 나눔 */
+      function splitLong(s, max) {
+        if (s.length <= max) return [s];
+        var out = [], cur = '';
+        s.split(' ').forEach(function (w) {
+          if (cur && (cur + ' ' + w).length > max) { out.push(cur); cur = w; }
+          else cur = cur ? cur + ' ' + w : w;
+        });
+        if (cur) out.push(cur);
+        return out;
+      }
 
       /* 페이지 본문을 읽기 좋은 문장 목록으로 변환 */
       function collectText() {
@@ -880,7 +904,7 @@
         if (foot) parts.push(foot.textContent);
 
         var text = parts.join('\n')
-          .replace(/[\u2800-\u28FF]/g, '')   // 점자 문자 제외
+          .replace(/[⠀-⣿]/g, '')   // 점자 문자 제외
           .replace(/\(\s*\)/g, '')           // 점자 제거 후 남는 빈 괄호
           .replace(/\*/g, '')
           .replace(/\|/g, ', ')
@@ -890,10 +914,10 @@
         text.split(/\n+/).forEach(function (line) {
           line = line.trim();
           if (!line) return;
-          /* 긴 문장은 일부 브라우저에서 끊기므로 문장 단위로 쪼개기 */
           (line.match(/[^.!?。]+[.!?。]?/g) || [line]).forEach(function (s) {
             s = s.trim();
-            if (s) out.push(s);
+            if (!s) return;
+            splitLong(s, 100).forEach(function (piece) { out.push(piece); });
           });
         });
         return out;
@@ -908,34 +932,57 @@
       }
 
       function stop() {
+        token++;
+        current = null;
         synth.cancel();
         setState(false);
       }
 
+      /* 한 문장씩 차례로 읽기 (모바일에서 긴 대기열보다 안정적) */
+      function speakAt(chunks, i, myToken) {
+        if (myToken !== token) return;
+        if (i >= chunks.length) { current = null; setState(false); return; }
+
+        var u = new SpeechSynthesisUtterance(chunks[i]);
+        u.lang = 'ko-KR';
+        if (koVoice) u.voice = koVoice;
+        u.rate = 0.95;
+        u.pitch = isMale ? 0.95 : 0.8;
+        u.volume = 1;
+        u.onend = function () { speakAt(chunks, i + 1, myToken); };
+        u.onerror = function (e) {
+          if (myToken !== token) return;
+          var err = e && e.error;
+          if (err === 'interrupted' || err === 'canceled' || err === 'not-allowed') {
+            token++; current = null; setState(false);   // 전화 수신 등으로 끊기면 중지 상태로
+          } else {
+            speakAt(chunks, i + 1, myToken);            // 그 외 오류는 다음 문장으로 넘어감
+          }
+        };
+        current = u;
+        synth.speak(u);
+      }
+
+      /* 반드시 버튼 클릭 안에서 바로 실행 (아이폰은 사용자 터치 직후에만 소리 허용) */
       function start() {
-        synth.cancel();
+        token++;
+        var myToken = token;
+        if (synth.speaking || synth.pending) synth.cancel();
+        if (synth.paused) synth.resume();
+        pickVoice();
         var chunks = collectText();
         if (!chunks.length) return;
         setState(true);
-        chunks.forEach(function (s, idx) {
-          var u = new SpeechSynthesisUtterance(s);
-          u.lang = 'ko-KR';
-          if (koVoice) u.voice = koVoice;
-          u.rate = 0.95;                   // 자연스러운 속도 (너무 느리면 소리가 갈라짐)
-          u.pitch = isMale ? 0.95 : 0.8;   // 톤을 극단적으로 낮추면 째지는 소리가 나므로 완만하게만 조절
-          u.volume = 1;
-          if (idx === chunks.length - 1) {
-            u.onend = function () { setState(false); };
-          }
-          u.onerror = function (e) {
-            if (e.error !== 'interrupted' && e.error !== 'canceled') setState(false);
-          };
-          synth.speak(u);
-        });
+        speakAt(chunks, 0, myToken);
       }
 
       btn.addEventListener('click', function () {
         if (speaking) stop(); else start();
+      });
+
+      /* 모바일은 화면을 끄거나 다른 앱으로 가면 음성이 멈추므로 버튼 상태도 함께 초기화 */
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden && speaking && IS_MOBILE) stop();
       });
       window.addEventListener('pagehide', function () { synth.cancel(); });
       window.addEventListener('beforeunload', function () { synth.cancel(); });
