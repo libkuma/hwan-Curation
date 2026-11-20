@@ -386,6 +386,58 @@
         border-radius: 6px;
       }
     }
+    /* ===== 음성 읽기 버튼 (메인 배너 우측 최상단) ===== */
+    .main-banner {
+      position: relative;
+    }
+    .tts-wrap {
+      position: absolute;
+      top: clamp(8px, 2vw, 14px);
+      right: max(clamp(8px, 2vw, 14px), env(safe-area-inset-right));
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      max-width: calc(100% - 20px);
+    }
+    .tts-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 0.9rem;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.95);
+      color: #004d40;
+      font-family: inherit;
+      font-size: clamp(0.8rem, 3vw, 0.95rem);
+      font-weight: 700;
+      line-height: 1;
+      text-shadow: none;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tts-btn:hover {
+      background: #e0f2f1;
+    }
+    .tts-btn:active {
+      transform: scale(0.96);
+    }
+    .tts-btn:focus-visible {
+      outline: 3px solid #ffeb3b;
+      outline-offset: 2px;
+    }
+    .tts-btn.speaking {
+      background: #004d40;
+      color: #fff;
+    }
+    .tts-btn .tts-icon {
+      font-size: 1.1em;
+    }
+
     /* 태블릿 이상: 카드 약간 크게 */
     @media (min-width: 900px) {
       .book-card {
@@ -416,6 +468,12 @@
   </nav>
 
   <div class="main-banner">
+  <div class="tts-wrap">
+    <button type="button" id="tts-btn" class="tts-btn" aria-pressed="false" aria-label="홈페이지 내용을 음성으로 읽어주기">
+      <span class="tts-icon" aria-hidden="true">🔊</span>
+      <span class="tts-label">음성으로 듣기</span>
+    </button>
+  </div>
   <p>개관부터 운영까지 다양한 현장을 경험한 사서, 지역주민과 함께하는 도서관을 만들겠습니다.</p>
   </div>
 
@@ -440,7 +498,7 @@
 
     <section id="ability">
       <h2>경력 및 자격(⠈⠻⠐⠱⠁⠀⠑⠕⠆⠀⠨⠈⠱⠁)</h2>
-      <h3>1. 분관 규모 도서관 개관 업무(⠈⠗⠈⠧⠒⠀⠎⠃⠑⠍)</h3>
+      <h3>1. 분관 규모 도서관 개관 업무*(⠈⠗⠈⠧⠒⠀⠎⠃⠑⠍)</h3>
       <ul>
         <li>자료실 서비스 구축: 책이음, 책바다 등 시스템 연동</li>
         <li>전산 및 시설 관리: 홈페이지, 모바일앱, CCTV, 개인정보 보호 등</li>
@@ -753,6 +811,134 @@
         probe.src = src;
         e.preventDefault();
       });
+    })();
+
+    /* 음성 읽기 (Web Speech API) */
+    (function () {
+      var btn = document.getElementById('tts-btn');
+      if (!btn) return;
+      var icon = btn.querySelector('.tts-icon');
+      var label = btn.querySelector('.tts-label');
+
+      if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+        btn.disabled = true;
+        label.textContent = '음성 미지원';
+        btn.title = '이 브라우저는 음성 읽기를 지원하지 않습니다.';
+        return;
+      }
+
+      var synth = window.speechSynthesis;
+      var speaking = false;
+      var koVoice = null;
+      var isMale = false;
+
+      /* 한국어 음성 중 가장 자연스러운(부드러운) 음성을 점수로 선택 */
+      function scoreVoice(v) {
+        var s = 0;
+        var n = (v.name || '').toLowerCase();
+        if (/natural|neural|online/.test(n)) s += 100;          // Edge 신경망 음성 (SunHi, InJoon 등)
+        // 서버 기반(구글 등) 음성은 톤 조절이 무시되므로, 남성 음성이 없으면 기기 내장 음성을 선호
+        if (v.localService) s += 60;
+        if (/google/.test(n)) s -= 40;
+        if (/injoon|인준|hyunsu|현수|minsu|민수|male|남성|man\b/.test(n)) s += 200; // 남성 음성 우선
+        if (/sunhi|선희|yuna|유나|sora|소라|heami|혜미|female|여성/.test(n)) s -= 150; // 여성 음성 제외
+        if (/premium|enhanced|향상/.test(n)) s += 40;           // iOS/macOS 고품질
+        if (/^ko[-_]kr$/i.test(v.lang)) s += 5;
+        return s;
+      }
+      var koList = [];
+      var MALE_RE = /injoon|인준|hyunsu|현수|minsu|민수|male|남성|man\b/i;
+
+      function applyVoice(v) {
+        koVoice = v || null;
+        isMale = !!v && MALE_RE.test(v.name || '');
+      }
+      function pickVoice() {
+        koList = synth.getVoices().filter(function (v) {
+          return /^ko([-_]|$)/i.test(v.lang);
+        });
+        koList.sort(function (a, b) { return scoreVoice(b) - scoreVoice(a); });
+        applyVoice(koList[0]);
+      }
+      pickVoice();
+      if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = pickVoice;
+
+      /* 페이지 본문을 읽기 좋은 문장 목록으로 변환 */
+      function collectText() {
+        var parts = [];
+        var h1 = document.querySelector('header h1');
+        if (h1) parts.push(h1.textContent);
+        var banner = document.querySelector('.main-banner p');
+        if (banner) parts.push(banner.textContent);
+
+        document.querySelectorAll('main section').forEach(function (sec) {
+          sec.querySelectorAll('h2, h3, p, li, figcaption').forEach(function (el) {
+            parts.push(el.textContent);
+          });
+        });
+        var foot = document.querySelector('footer');
+        if (foot) parts.push(foot.textContent);
+
+        var text = parts.join('\n')
+          .replace(/[\u2800-\u28FF]/g, '')   // 점자 문자 제외
+          .replace(/\(\s*\)/g, '')           // 점자 제거 후 남는 빈 괄호
+          .replace(/\*/g, '')
+          .replace(/\|/g, ', ')
+          .replace(/[ \t]+/g, ' ');
+
+        var out = [];
+        text.split(/\n+/).forEach(function (line) {
+          line = line.trim();
+          if (!line) return;
+          /* 긴 문장은 일부 브라우저에서 끊기므로 문장 단위로 쪼개기 */
+          (line.match(/[^.!?。]+[.!?。]?/g) || [line]).forEach(function (s) {
+            s = s.trim();
+            if (s) out.push(s);
+          });
+        });
+        return out;
+      }
+
+      function setState(on) {
+        speaking = on;
+        btn.classList.toggle('speaking', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        icon.textContent = on ? '⏹' : '🔊';
+        label.textContent = on ? '읽기 중지' : '음성으로 듣기';
+      }
+
+      function stop() {
+        synth.cancel();
+        setState(false);
+      }
+
+      function start() {
+        synth.cancel();
+        var chunks = collectText();
+        if (!chunks.length) return;
+        setState(true);
+        chunks.forEach(function (s, idx) {
+          var u = new SpeechSynthesisUtterance(s);
+          u.lang = 'ko-KR';
+          if (koVoice) u.voice = koVoice;
+          u.rate = 0.95;                   // 자연스러운 속도 (너무 느리면 소리가 갈라짐)
+          u.pitch = isMale ? 0.95 : 0.8;   // 톤을 극단적으로 낮추면 째지는 소리가 나므로 완만하게만 조절
+          u.volume = 1;
+          if (idx === chunks.length - 1) {
+            u.onend = function () { setState(false); };
+          }
+          u.onerror = function (e) {
+            if (e.error !== 'interrupted' && e.error !== 'canceled') setState(false);
+          };
+          synth.speak(u);
+        });
+      }
+
+      btn.addEventListener('click', function () {
+        if (speaking) stop(); else start();
+      });
+      window.addEventListener('pagehide', function () { synth.cancel(); });
+      window.addEventListener('beforeunload', function () { synth.cancel(); });
     })();
   </script>
 </body>
